@@ -6,6 +6,7 @@
 #include "../../Common/TextureLoader.h"
 #include "../CSC8503Common/PositionConstraint.h"
 
+
 using namespace NCL;
 using namespace CSC8503;
 
@@ -21,6 +22,7 @@ TutorialGame::TutorialGame()	{
 	Debug::SetRenderer(renderer);
 
 	InitialiseAssets();
+
 }
 
 /*
@@ -73,6 +75,8 @@ void TutorialGame::UpdateGame(float dt) {
 		world->GetMainCamera()->UpdateCamera(dt);
 	}
 
+	score = 1000- difftime(time(0), start) *10;
+	Debug::Print(std::to_string(score), Vector2(80,10));
 	UpdateKeys();
 
 	if (useGravity) {
