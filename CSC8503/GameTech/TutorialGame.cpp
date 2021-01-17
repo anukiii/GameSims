@@ -4,6 +4,7 @@
 #include "../../Plugins/OpenGLRendering/OGLShader.h"
 #include "../../Plugins/OpenGLRendering/OGLTexture.h"
 #include "../../Common/TextureLoader.h"
+#include "../CSC8503Common/PositionConstraint.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -100,7 +101,7 @@ void TutorialGame::UpdateGame(float dt) {
 		world->GetMainCamera()->SetPitch(angles.x);
 		world->GetMainCamera()->SetYaw(angles.y);
 
-		//Debug::DrawAxisLines(lockedObject->GetTransform().GetMatrix(), 2.0f);
+		Debug::DrawAxisLines(lockedObject->GetTransform().GetMatrix(), 2.0f);
 	}
 
 	world->UpdateWorld(dt);
@@ -119,6 +120,10 @@ void TutorialGame::UpdateKeys() {
 
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F2)) {
 		InitCamera(); //F2 will reset the camera to a specific default place
+	}
+
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F3)) {
+		AddPlayerToWorld(Vector3(0,0,0)); //F2 will reset the camera to a specific default place
 	}
 
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::G)) {
@@ -147,7 +152,7 @@ void TutorialGame::UpdateKeys() {
 		LockedObjectMovement();
 	}
 	else {
-		DebugObjectMovement();
+		//DebugObjectMovement();
 	}
 }
 
@@ -172,11 +177,19 @@ void TutorialGame::LockedObjectMovement() {
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT)) {
 		lockedObject->GetPhysicsObject()->AddForce(-rightAxis * force);
+		if (lockedObject->GetTransform().GetOrientation().y >= -0.65) {
+			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 5, 0));
+		}
+		else { lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -5, 0)); }
 	}
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::RIGHT)) {
-		Vector3 worldPos = selectionObject->GetTransform().GetPosition();
 		lockedObject->GetPhysicsObject()->AddForce(rightAxis * force);
+
+		if (lockedObject->GetTransform().GetOrientation().y>=-0.65) {
+			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -5, 0));
+		}
+		else { lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 5, 0)); }
 	}
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::UP)) {
@@ -187,9 +200,9 @@ void TutorialGame::LockedObjectMovement() {
 		lockedObject->GetPhysicsObject()->AddForce(-fwdAxis * force);
 	}
 
-	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NEXT)) {
-		lockedObject->GetPhysicsObject()->AddForce(Vector3(0,-10,0));
-	}
+	//if (Window::GetKeyboard()->KeyDown(KeyboardKeys::SPACE)) {
+	//	lockedObject->GetPhysicsObject()->AddForce(Vector3(0,-10,0));
+	//}
 }
 
 void TutorialGame::DebugObjectMovement() {
@@ -243,14 +256,38 @@ void TutorialGame::InitCamera() {
 void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
+	//InitMixedGridWorld(5, 5, 3.5f, 3.5f);
+	//BridgeConstraintTest();
+	InitSphereGridWorld(5, 5, 50, 50, 2);
+	//InitGameExamples();
+	AddPlayerToWorld(Vector3(0, 0, 0));
 
-	InitMixedGridWorld(5, 5, 3.5f, 3.5f);
-	InitGameExamples();
 	InitDefaultFloor();
 }
 
 void TutorialGame::BridgeConstraintTest() {
+	
+		Vector3  cubeSize = Vector3(8, 8, 8);
 
+		float     invCubeMass = 5; //how  heavy  the  middle  pieces  are
+		int        numLinks      = 10;   
+		float     maxDistance   = 30; // constraint  distance    
+		float     cubeDistance = 20; // distance  between  links 
+		
+		Vector3  startPos = Vector3 (50, 50,  50); 
+			
+		GameObject* start = AddCubeToWorld(startPos + Vector3(0, 0, 0), cubeSize , 0);  
+		GameObject* end = AddCubeToWorld(startPos + Vector3 (( numLinks + 2) * cubeDistance , 0, 0), cubeSize , 0);
+		GameObject* previous = start;
+
+		for (int i = 0; i < numLinks; ++i) {   
+			GameObject* block = AddCubeToWorld(startPos + Vector3 ((i + 1) * cubeDistance , 0, 0), cubeSize , invCubeMass );       
+			PositionConstraint* constraint =new  PositionConstraint(previous , block , maxDistance );    
+			world ->AddConstraint(constraint );
+			previous = block;   
+		}  
+		PositionConstraint* constraint = new  PositionConstraint(previous , end , maxDistance );     
+		world ->AddConstraint(constraint );
 
 }
 
@@ -262,7 +299,7 @@ A single function to add a large immoveable cube to the bottom of our world
 GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
 	GameObject* floor = new GameObject();
 
-	Vector3 floorSize	= Vector3(100, 2, 100);
+	Vector3 floorSize	= Vector3(300, 2, 300);
 	AABBVolume* volume	= new AABBVolume(floorSize);
 	floor->SetBoundingVolume((CollisionVolume*)volume);
 	floor->GetTransform()
@@ -424,7 +461,7 @@ GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 
 	character->GetPhysicsObject()->SetInverseMass(inverseMass);
 	character->GetPhysicsObject()->InitSphereInertia();
-
+	lockedObject = character;
 	world->AddGameObject(character);
 
 	//lockedObject = character;

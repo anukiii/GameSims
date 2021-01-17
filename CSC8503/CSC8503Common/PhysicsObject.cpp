@@ -41,6 +41,7 @@ void PhysicsObject::AddForceAtPosition(const Vector3& addedForce, const Vector3&
 
 void PhysicsObject::AddTorque(const Vector3& addedTorque) {
 	torque += addedTorque;
+	modelDirection += addedTorque;
 }
 
 void PhysicsObject::ClearForces() {

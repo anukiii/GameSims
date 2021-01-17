@@ -38,6 +38,9 @@ namespace NCL {
 			float GetInverseMass() const {
 				return inverseMass;
 			}
+			Vector3 GetModelDirection() const {
+				return modelDirection;
+			}
 
 			void ApplyAngularImpulse(const Vector3& force);
 			void ApplyLinearImpulse(const Vector3& force);
@@ -86,6 +89,8 @@ namespace NCL {
 			Vector3 torque;
 			Vector3 inverseInertia;
 			Matrix3 inverseInteriaTensor;
+
+			Vector3 modelDirection = Vector3(0, 0, 0);
 		};
 	}
 }

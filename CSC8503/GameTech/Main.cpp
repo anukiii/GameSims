@@ -11,6 +11,46 @@
 using namespace NCL;
 using namespace CSC8503;
 
+
+void  TestStateMachine() {
+	StateMachine * testMachine = new  StateMachine();
+	int  data = 0;
+	State * A = new  State([&](float dt)->void
+		{
+		std::cout << "Im in  state A!\n";
+		data++; 
+		}
+	);
+	
+	State * B = new  State([&](float dt)->void 
+		{           
+		std::cout << "Im in  state B!\n";          
+		data--;    
+		}
+	);
+
+	StateTransition* stateAB = new  StateTransition(A, B, [&](void)->bool
+		{     
+		return  data > 10;    
+		}
+	);      StateTransition * stateBA = new  StateTransition(B, A, [&](void)->bool
+		{          
+			return  data < 0;         
+		}
+	);
+
+	testMachine->AddState(A);
+	testMachine->AddState(B);
+	testMachine->AddTransition(stateAB);
+	testMachine->AddTransition(stateBA);
+	
+	for (int i = 0; i < 100; ++i) {       
+		testMachine->Update(); //1.0f?
+	}
+}
+
+
+
 /*
 
 The main function should look pretty familar to you!
@@ -55,6 +95,7 @@ int main() {
 		w->SetTitle("Gametech frame time:" + std::to_string(1000.0f * dt));
 
 		g->UpdateGame(dt);
+		TestStateMachine();
 	}
 	Window::DestroyGameWindow();
 }

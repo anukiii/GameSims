@@ -66,8 +66,8 @@ namespace NCL {
 			OGLMesh*	bonusMesh	= nullptr;
 
 			//Coursework Additional functionality	
-			GameObject* lockedObject	= nullptr;
-			Vector3 lockedOffset		= Vector3(0, 14, 20);
+			GameObject* lockedObject = nullptr;
+			Vector3 lockedOffset		= Vector3(0, 10, 30);
 			void LockCameraToObject(GameObject* o) {
 				lockedObject = o;
 			}
