@@ -18,7 +18,7 @@ TutorialGame::TutorialGame()	{
 	forceMagnitude	= 10.0f;
 	useGravity		= false;
 	inSelectionMode = false;
-
+	Bonuses = 0;
 	Debug::SetRenderer(renderer);
 
 	InitialiseAssets();
@@ -71,11 +71,22 @@ TutorialGame::~TutorialGame()	{
 }
 
 void TutorialGame::UpdateGame(float dt) {
+	
+	for (int i = 0; i < world->getGameObjects().size(); i++) {
+		if (world->getGameObjects().at(i)->isColiding() != nullptr) {
+			if (world->getGameObjects().at(i)->isColiding()->getType() == "Player" && world->getGameObjects().at(i)->getType() == "Bonus") {
+				Bonuses++;
+				world->getGameObjects().at(i)->setType("Collected");
+				world->getGameObjects().at(i)->removeObject();
+				std::cout << "COLIDING" << '\n';
+			}
+		}
+	}
 	if (!inSelectionMode) {
 		world->GetMainCamera()->UpdateCamera(dt);
 	}
-
-	score = 1000- difftime(time(0), start) *10;
+	score = 1000 + Bonuses*100 - difftime(time(0), start) * 10;
+	
 	Debug::Print(std::to_string(score), Vector2(80,10));
 	UpdateKeys();
 
@@ -126,9 +137,7 @@ void TutorialGame::UpdateKeys() {
 		InitCamera(); //F2 will reset the camera to a specific default place
 	}
 
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F3)) {
-		AddPlayerToWorld(Vector3(0,0,0)); //F2 will reset the camera to a specific default place
-	}
+
 
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::G)) {
 		useGravity = !useGravity; //Toggle gravity!
@@ -260,10 +269,10 @@ void TutorialGame::InitCamera() {
 void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
-	//InitMixedGridWorld(5, 5, 3.5f, 3.5f);
-	//BridgeConstraintTest();
+	AddBonusToWorld(Vector3(7, 7, 7));
+;
 	InitSphereGridWorld(5, 5, 50, 50, 2);
-	//InitGameExamples();
+
 	AddPlayerToWorld(Vector3(0, 0, 0));
 
 	InitDefaultFloor();
@@ -309,7 +318,7 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
 	floor->GetTransform()
 		.SetScale(floorSize * 2)
 		.SetPosition(position);
-
+	floor->setType("Floor");
 	floor->SetRenderObject(new RenderObject(&floor->GetTransform(), cubeMesh, basicTex, basicShader));
 	floor->SetPhysicsObject(new PhysicsObject(&floor->GetTransform(), floor->GetBoundingVolume()));
 
@@ -334,7 +343,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 	Vector3 sphereSize = Vector3(radius, radius, radius);
 	SphereVolume* volume = new SphereVolume(radius);
 	sphere->SetBoundingVolume((CollisionVolume*)volume);
-
+	sphere->setType("Sphere");
 	sphere->GetTransform()
 		.SetScale(sphereSize)
 		.SetPosition(position);
@@ -355,7 +364,7 @@ GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float halfH
 
 	CapsuleVolume* volume = new CapsuleVolume(halfHeight, radius);
 	capsule->SetBoundingVolume((CollisionVolume*)volume);
-
+	capsule->setType("Capsule");
 	capsule->GetTransform()
 		.SetScale(Vector3(radius* 2, halfHeight, radius * 2))
 		.SetPosition(position);
@@ -378,7 +387,7 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	AABBVolume* volume = new AABBVolume(dimensions);
 
 	cube->SetBoundingVolume((CollisionVolume*)volume);
-
+	cube->setType("Cube");
 	cube->GetTransform()
 		.SetPosition(position)
 		.SetScale(dimensions * 2);
@@ -450,7 +459,7 @@ GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 	AABBVolume* volume = new AABBVolume(Vector3(0.3f, 0.85f, 0.3f) * meshSize);
 
 	character->SetBoundingVolume((CollisionVolume*)volume);
-
+	character->setType("Player");
 	character->GetTransform()
 		.SetScale(Vector3(meshSize, meshSize, meshSize))
 		.SetPosition(position);
@@ -468,8 +477,6 @@ GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 	lockedObject = character;
 	world->AddGameObject(character);
 
-	//lockedObject = character;
-
 	return character;
 }
 
@@ -481,7 +488,7 @@ GameObject* TutorialGame::AddEnemyToWorld(const Vector3& position) {
 
 	AABBVolume* volume = new AABBVolume(Vector3(0.3f, 0.9f, 0.3f) * meshSize);
 	character->SetBoundingVolume((CollisionVolume*)volume);
-
+	character->setType("Enemy");
 	character->GetTransform()
 		.SetScale(Vector3(meshSize, meshSize, meshSize))
 		.SetPosition(position);
@@ -500,8 +507,10 @@ GameObject* TutorialGame::AddEnemyToWorld(const Vector3& position) {
 GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 	GameObject* apple = new GameObject();
 
-	SphereVolume* volume = new SphereVolume(0.25f);
+	SphereVolume* volume = new SphereVolume(1.0f);
 	apple->SetBoundingVolume((CollisionVolume*)volume);
+	apple->setType("Bonus");
+
 	apple->GetTransform()
 		.SetScale(Vector3(0.25, 0.25, 0.25))
 		.SetPosition(position);

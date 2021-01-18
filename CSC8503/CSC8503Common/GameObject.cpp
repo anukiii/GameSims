@@ -10,6 +10,8 @@ GameObject::GameObject(string objectName)	{
 	boundingVolume	= nullptr;
 	physicsObject	= nullptr;
 	renderObject	= nullptr;
+	type			= "";
+	ColidingWith	= nullptr;
 }
 
 GameObject::~GameObject()	{

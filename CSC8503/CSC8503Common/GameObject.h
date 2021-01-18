@@ -49,16 +49,33 @@ namespace NCL {
 				physicsObject = newObject;
 			}
 
+			const string& getType() const {
+				return type;
+			}
+
+			void setType(string Type) {
+				type = Type;
+			}
+
+			GameObject* isColiding() {
+				return ColidingWith;
+			}
+
+			void removeObject() {
+				boundingVolume = nullptr;
+				renderObject = nullptr;
+			}
+
 			const string& GetName() const {
 				return name;
 			}
 
 			virtual void OnCollisionBegin(GameObject* otherObject) {
-				//std::cout << "OnCollisionBegin event occured!\n";
+				ColidingWith = otherObject;
 			}
 
 			virtual void OnCollisionEnd(GameObject* otherObject) {
-				//std::cout << "OnCollisionEnd event occured!\n";
+				ColidingWith = nullptr;
 			}
 
 			bool GetBroadphaseAABB(Vector3&outsize) const;
@@ -83,8 +100,11 @@ namespace NCL {
 			bool	isActive;
 			int		worldID;
 			string	name;
+			GameObject* ColidingWith;
 
 			Vector3 broadphaseAABB;
+			string type;
+
 		};
 	}
 }

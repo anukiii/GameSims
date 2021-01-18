@@ -1,7 +1,7 @@
 #pragma once
 #include "GameTechRenderer.h"
 #include "../CSC8503Common/PhysicsSystem.h"
-#include <time.h>
+
 
 namespace NCL {
 	namespace CSC8503 {
@@ -72,8 +72,10 @@ namespace NCL {
 			void LockCameraToObject(GameObject* o) {
 				lockedObject = o;
 			}
-			int score = 1000;
 			time_t  start = time(0);
+			int Bonuses;
+			int score;
+
 
 		};
 	}
