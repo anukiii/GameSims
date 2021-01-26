@@ -190,27 +190,52 @@ void TutorialGame::LockedObjectMovement() {
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT)) {
 		lockedObject->GetPhysicsObject()->AddForce(-rightAxis * force);
-		if (lockedObject->GetTransform().GetOrientation().y >= -0.65) {
-			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 5, 0));
+
+		
+
+		if (lockedObject->GetTransform().GetOrientation().y <= 0.65) {
+			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 6, 0));
 		}
-		else { lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -5, 0)); }
+		else { lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -10, 0)); }
 	}
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::RIGHT)) {
 		lockedObject->GetPhysicsObject()->AddForce(rightAxis * force);
-
+		
 		if (lockedObject->GetTransform().GetOrientation().y>=-0.65) {
-			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -5, 0));
+			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -6, 0));
 		}
-		else { lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 5, 0)); }
+		else { lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
+		 }
 	}
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::UP)) {
 		lockedObject->GetPhysicsObject()->AddForce(fwdAxis * force);
+		if (lockedObject->GetTransform().GetOrientation().y >= 0) {
+			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -6, 0));
+		}
+		else {
+			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
+		}
 	}
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::DOWN)) {
+		std::cout << lockedObject->GetTransform().GetOrientation().y << '\n';
+
 		lockedObject->GetPhysicsObject()->AddForce(-fwdAxis * force);
+		if (lockedObject->GetTransform().GetOrientation().y <= 0 && lockedObject->GetTransform().GetOrientation().y >=-0.97) {
+			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -6, 0));
+		}
+		else if (lockedObject->GetTransform().GetOrientation().y <= 0 && lockedObject->GetTransform().GetOrientation().y >= -1) {
+			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
+
+		}
+		else if (lockedObject->GetTransform().GetOrientation().y > 0 &&lockedObject->GetTransform().GetOrientation().y <= 0.97){
+			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 6, 0));
+		}
+		else {
+			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -10, 0));
+		}
 	}
 
 	//if (Window::GetKeyboard()->KeyDown(KeyboardKeys::SPACE)) {
