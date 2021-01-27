@@ -105,6 +105,15 @@
     <ClInclude Include="PositionConstraint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="PauseScreen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GameScreen.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Intro.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="GameWorld.cpp">
@@ -129,9 +138,6 @@
       <Filter>AI</Filter>
     </ClCompile>
     <ClCompile Include="StateTransition.cpp">
-      <Filter>AI</Filter>
-    </ClCompile>
-    <ClCompile Include="PushdownState.cpp">
       <Filter>AI</Filter>
     </ClCompile>
     <ClCompile Include="PushdownMachine.cpp">
