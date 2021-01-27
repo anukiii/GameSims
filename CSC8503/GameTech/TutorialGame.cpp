@@ -5,6 +5,7 @@
 #include "../../Plugins/OpenGLRendering/OGLTexture.h"
 #include "../../Common/TextureLoader.h"
 #include "../CSC8503Common/PositionConstraint.h"
+#include "../GameTech/StateGameObject.h"
 
 
 using namespace NCL;
@@ -20,8 +21,7 @@ TutorialGame::TutorialGame()	{
 	inSelectionMode = false;
 	Bonuses = 0;
 	Debug::SetRenderer(renderer);
-
-	InitialiseAssets();
+	scene = 0;
 
 }
 
@@ -52,7 +52,9 @@ void TutorialGame::InitialiseAssets() {
 
 	InitCamera();
 	InitWorld();
+	start = time(0);
 }
+
 
 TutorialGame::~TutorialGame()	{
 	delete cubeMesh;
@@ -70,8 +72,26 @@ TutorialGame::~TutorialGame()	{
 	delete world;
 }
 
-void TutorialGame::UpdateGame(float dt) {
-	
+void TutorialGame::mainMenu(float dt) {
+	Debug::Print("TRIP GIRLS", Vector2(40, 30));
+	Debug::Print("Press 1 to start", Vector2(35, 40));
+	Debug::Print("Press esc to exit", Vector2(35, 50));
+	renderer->Update(dt);
+
+	Debug::FlushRenderables(dt);
+	renderer->Render();
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM1)) {
+		scene = 1;
+		InitialiseAssets();
+	}
+}
+
+
+
+
+void TutorialGame::mainGame(float dt) {
+
+
 	for (int i = 0; i < world->getGameObjects().size(); i++) {
 		if (world->getGameObjects().at(i)->isColiding() != nullptr) {
 			if (world->getGameObjects().at(i)->isColiding()->getType() == "Player" && world->getGameObjects().at(i)->getType() == "Bonus") {
@@ -82,12 +102,17 @@ void TutorialGame::UpdateGame(float dt) {
 			}
 		}
 	}
+
+	if (testStateObject) { 
+		testStateObject->Update(dt); 
+	}
+
 	if (!inSelectionMode) {
 		world->GetMainCamera()->UpdateCamera(dt);
 	}
-	score = 1000 + Bonuses*100 - difftime(time(0), start) * 10;
-	
-	Debug::Print(std::to_string(score), Vector2(80,10));
+	score = 1000 + Bonuses * 100 - difftime(time(0), start) * 10;
+
+	Debug::Print(std::to_string(score), Vector2(80, 10));
 	UpdateKeys();
 
 	if (useGravity) {
@@ -105,7 +130,7 @@ void TutorialGame::UpdateGame(float dt) {
 		Vector3 objPos = lockedObject->GetTransform().GetPosition();
 		Vector3 camPos = objPos + lockedOffset;
 
-		Matrix4 temp = Matrix4::BuildViewMatrix(camPos, objPos, Vector3(0,1,0));
+		Matrix4 temp = Matrix4::BuildViewMatrix(camPos, objPos, Vector3(0, 1, 0));
 
 		Matrix4 modelMat = temp.Inverse();
 
@@ -124,6 +149,42 @@ void TutorialGame::UpdateGame(float dt) {
 
 	Debug::FlushRenderables(dt);
 	renderer->Render();
+
+	scene = (score == 0 ? 2 : scene);
+}
+
+void TutorialGame::endScreen(float dt) {
+	Debug::Print("GAME OVER", Vector2(40, 30));
+	Debug::Print("Press 1 to start", Vector2(35, 40));
+	Debug::Print("Press esc to exit", Vector2(35, 50));
+	renderer->Update(dt);
+
+	Debug::FlushRenderables(dt);
+	renderer->Render();
+	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM1)) {
+		scene = 1;
+		InitialiseAssets();
+	}
+}
+
+
+void TutorialGame::UpdateGame(float dt) {
+
+
+	switch (scene) {
+	case 0:
+		mainMenu(dt); break;
+
+	case 1:
+		mainGame(dt);
+		break;
+	case 2:
+		endScreen(dt);
+		break;
+	}
+
+
+
 }
 
 void TutorialGame::UpdateKeys() {
@@ -220,8 +281,6 @@ void TutorialGame::LockedObjectMovement() {
 	}
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::DOWN)) {
-		std::cout << lockedObject->GetTransform().GetOrientation().y << '\n';
-
 		lockedObject->GetPhysicsObject()->AddForce(-fwdAxis * force);
 		if (lockedObject->GetTransform().GetOrientation().y <= 0 && lockedObject->GetTransform().GetOrientation().y >=-0.97) {
 			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -6, 0));
@@ -238,49 +297,9 @@ void TutorialGame::LockedObjectMovement() {
 		}
 	}
 
-	//if (Window::GetKeyboard()->KeyDown(KeyboardKeys::SPACE)) {
-	//	lockedObject->GetPhysicsObject()->AddForce(Vector3(0,-10,0));
-	//}
-}
-
-void TutorialGame::DebugObjectMovement() {
-//If we've selected an object, we can manipulate it with some key presses
-	if (inSelectionMode && selectionObject) {
-		//Twist the selected object!
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(-10, 0, 0));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::RIGHT)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(10, 0, 0));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM7)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM8)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(0, -10, 0));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::RIGHT)) {
-			selectionObject->GetPhysicsObject()->AddTorque(Vector3(10, 0, 0));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::UP)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, -10));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::DOWN)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, 0, 10));
-		}
-
-		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::NUM5)) {
-			selectionObject->GetPhysicsObject()->AddForce(Vector3(0, -10, 0));
-		}
-	}
 
 }
+
 
 void TutorialGame::InitCamera() {
 	world->GetMainCamera()->SetNearPlane(0.1f);
@@ -301,6 +320,9 @@ void TutorialGame::InitWorld() {
 	AddPlayerToWorld(Vector3(0, 0, 0));
 
 	InitDefaultFloor();
+
+	testStateObject = AddStateObjectToWorld(Vector3(0, 10, 0));
+
 }
 
 void TutorialGame::BridgeConstraintTest() {
@@ -354,6 +376,31 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
 
 	return floor;
 }
+
+
+StateGameObject* NCL::CSC8503::TutorialGame::AddStateObjectToWorld(const Vector3& position)
+{
+	StateGameObject* apple = new StateGameObject();
+
+	SphereVolume* volume = new SphereVolume(1.0f);
+	apple->SetBoundingVolume((CollisionVolume*)volume);
+	apple->setType("Sphere");
+
+	apple->GetTransform()
+		.SetScale(Vector3(1, 1, 1))
+		.SetPosition(position);
+
+	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), sphereMesh, nullptr, basicShader));
+	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
+
+	apple->GetPhysicsObject()->SetInverseMass(0.1f);
+	apple->GetPhysicsObject()->InitSphereInertia();
+
+	world->AddGameObject(apple);
+
+	return apple;
+}
+
 
 /*
 

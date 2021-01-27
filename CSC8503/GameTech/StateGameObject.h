@@ -13,10 +13,10 @@ namespace  CSC8503 {
 	protected:   
 	void  MoveLeft(float dt); 
 
-void  MoveRight(float dt);     
+	void  MoveRight(float dt);     
 
-StateMachine* stateMachine;   
-float  counter;  
-};    
+	StateMachine* stateMachine;   
+	float  counter;  
+	};    
 } 
 }

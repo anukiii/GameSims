@@ -1,5 +1,6 @@
 #pragma once
 #include "GameTechRenderer.h"
+#include "../GameTech/StateGameObject.h"
 #include "../CSC8503Common/PhysicsSystem.h"
 
 
@@ -14,6 +15,7 @@ namespace NCL {
 
 		protected:
 			void InitialiseAssets();
+			StateGameObject* AddStateObjectToWorld(const  Vector3& position);
 
 			void InitCamera();
 			void UpdateKeys();
@@ -42,6 +44,13 @@ namespace NCL {
 			GameObject* AddPlayerToWorld(const Vector3& position);
 			GameObject* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
+			
+			void mainMenu(float dt);
+			void mainGame(float dt);
+			void endScreen(float dt);
+
+
+
 
 			GameTechRenderer*	renderer;
 			PhysicsSystem*		physics;
@@ -66,16 +75,19 @@ namespace NCL {
 			OGLMesh*	enemyMesh	= nullptr;
 			OGLMesh*	bonusMesh	= nullptr;
 
+			StateGameObject* testStateObject = nullptr;
+
+
 			//Coursework Additional functionality	
 			GameObject* lockedObject = nullptr;
 			Vector3 lockedOffset		= Vector3(0, 10, 30);
 			void LockCameraToObject(GameObject* o) {
 				lockedObject = o;
 			}
-			time_t  start = time(0);
+			time_t  start;
 			int Bonuses;
 			int score;
-
+			int scene; // 0 is main menu, 1, is level, 2 is end screen
 
 		};
 	}
