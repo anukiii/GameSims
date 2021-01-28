@@ -19,9 +19,12 @@ and the forces that are added to objects to change those positions
 
 */
 
+
+
+
 PhysicsSystem::PhysicsSystem(GameWorld& g) : gameWorld(g)	{
-	applyGravity	= false;
-	useBroadPhase	= false;	
+	applyGravity	= true;
+	useBroadPhase	= true;	
 	dTOffset		= 0.0f;
 	globalDamping	= 0.995f;
 	SetGravity(Vector3(0.0f, -9.8f, 0.0f));
@@ -347,16 +350,17 @@ void PhysicsSystem::IntegrateAccel(float dt) {
 			PhysicsObject* object = (*i)->GetPhysicsObject();
 			if (object == nullptr) {
 
-				continue; //No  physics  object  for  this  GameObject!10     
+				continue; //No  physics  object  for  this  GameObject!
 			}
 			float  inverseMass = object->GetInverseMass();
 
 			Vector3  linearVel = object->GetLinearVelocity();
 			Vector3  force = object->GetForce();
-			Vector3  accel = force * inverseMass;
+
+			Vector3  accel = force * inverseMass * 0.8; // adding friction
 
 			if (applyGravity && inverseMass > 0) {
-				accel += gravity; //don’t move  infinitely  heavy  things19      
+				accel += gravity; //don’t move  infinitely  heavy  things     
 			}
 
 			linearVel += accel * dt; // integrate  accel!  
@@ -365,7 +369,7 @@ void PhysicsSystem::IntegrateAccel(float dt) {
 			Vector3  torque = object ->GetTorque ();
 			Vector3  angVel = object ->GetAngularVelocity ();
 				
-			object ->UpdateInertiaTensor (); // update  tensor  vs  orientation910   
+			object ->UpdateInertiaTensor (); // update  tensor  vs  orientation  
 			
 			Vector3  angAccel = object ->GetInertiaTensor () * torque;     
 				
@@ -396,7 +400,7 @@ void PhysicsSystem::IntegrateVelocity(float dt) {
 				// Position  Stuff       
 				Vector3  position   = transform.GetPosition ();     
 				Vector3  linearVel = object ->GetLinearVelocity ();  
-				position  +=  linearVel * dt;      
+				position  +=  linearVel * dt ;
 				transform.SetPosition(position );    
 				//  Linear  Damping
 				linearVel = linearVel * frameLinearDamping;    

@@ -180,7 +180,6 @@
     <ClCompile Include="PhysicsSystem.cpp" />
     <ClCompile Include="PositionConstraint.cpp" />
     <ClCompile Include="PushdownMachine.cpp" />
-    <ClCompile Include="QuadTree.cpp" />
     <ClCompile Include="RenderObject.cpp" />
     <ClCompile Include="StateMachine.cpp" />
     <ClCompile Include="StateTransition.cpp" />

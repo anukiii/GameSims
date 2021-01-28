@@ -15,7 +15,7 @@ namespace NCL {
 			void setScene(int newScene);
 			int getScore() { return score; }
 			void InitialiseAssets();
-			bool isWin() { return win; }
+			int isWin() { return win; }
 
 
 		protected:
@@ -31,6 +31,7 @@ namespace NCL {
 			void InitSphereGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, float radius);
 			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
+			void InitMoveGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitDefaultFloor();
 			void BridgeConstraintTest();
 	
@@ -39,7 +40,8 @@ namespace NCL {
 			void DebugObjectMovement();
 			void LockedObjectMovement();
 			
-			
+			void enemyPathfindingSetup();
+			void enemyPathfinding(GameObject * enemy);
 			
 			GameObject* addEndToWorld(const Vector3& position);
 			GameObject* AddFloorToWorld(const Vector3& position);
@@ -66,7 +68,7 @@ namespace NCL {
 
 			bool useGravity;
 			bool inSelectionMode;
-			bool win;
+			int win;
 
 			float		forceMagnitude;
 
@@ -89,6 +91,9 @@ namespace NCL {
 
 			StateGameObject* testStateObject = nullptr;
 
+			vector <Vector3 > testNodes;
+			int currentNode;
+			int enemyStuckCounter;
 
 			//Coursework Additional functionality	
 			GameObject* lockedObject = nullptr;

@@ -6,6 +6,8 @@
 #include "../../Common/TextureLoader.h"
 #include "../CSC8503Common/PositionConstraint.h"
 #include "../GameTech/StateGameObject.h"
+#include "../CSC8503Common/NavigationGrid.h"
+
 
 
 using namespace NCL;
@@ -53,10 +55,13 @@ void TutorialGame::InitialiseAssets() {
 	redTex = (OGLTexture*)TextureLoader::LoadAPITexture("redTex.png");
 	basicShader = new OGLShader("GameTechVert.glsl", "GameTechFrag.glsl");
 
+	enemyPathfindingSetup();
+	currentNode = 0;
 	InitCamera();
 	InitWorld();
 	start = time(0);
-	win = false;
+	win = 0;
+	enemyStuckCounter = 0;
 
 }
 
@@ -97,29 +102,88 @@ void TutorialGame::mainMenu(float dt) {
 
 }
 
+void NCL::CSC8503::TutorialGame::enemyPathfinding(GameObject* enemy){
+	
 
+
+	if (abs(enemy->GetTransform().GetPosition().x -testNodes.at(currentNode).x) <=20 && abs(enemy->GetTransform().GetPosition().z - testNodes.at(currentNode).z) <= 20) {
+
+		currentNode++;
+	}
+
+	enemy->GetPhysicsObject()->AddForce(( testNodes.at(currentNode)- enemy->GetTransform().GetPosition() )*3);
+
+	for (int i = 1; i < testNodes.size(); ++i) {
+			Vector3 a = testNodes[i - 1];
+			Vector3 b = testNodes[i];
+
+
+			Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
+		}
+
+}
 
 
 void TutorialGame::mainGame(float dt) {
 
 
 	for (int i = 0; i < world->getGameObjects().size(); i++) {
+		if (world->getGameObjects().at(i)->getType() == "Enemy") {
+
+
+
+			enemyPathfinding(world->getGameObjects().at(i));
+			if (world->getGameObjects().at(i)->isColiding() != nullptr) {
+
+				if (world->getGameObjects().at(i)->isColiding()->getType() != "Floor" && world->getGameObjects().at(i)->GetTransform().GetPosition().y < 5) {
+					enemyStuckCounter++;
+					world->getGameObjects().at(i)->GetPhysicsObject()->AddForce(Vector3(0, 2000, 0));//Avoiods obstacles by jumping over them
+					if (enemyStuckCounter > 500 || world->getGameObjects().at(i)->isColiding()->GetTransform().GetPosition().y < -5) {							//enemy restart if falls off or is stuck
+						world->getGameObjects().at(i)->GetTransform().SetPosition(Vector3(560, 0, 560));
+					}
+				}
+				else {
+					enemyStuckCounter = 0;
+				}
+			}
+		}
+		if (world->getGameObjects().at(i)->getType() == "Player" && world->getGameObjects().at(i)->GetTransform().GetPosition().y < -5) {
+			win = -1;
+		}
 		if (world->getGameObjects().at(i)->isColiding() != nullptr) {
-			if (world->getGameObjects().at(i)->isColiding()->getType() == "Player" && world->getGameObjects().at(i)->getType() == "Bonus") {
+			if (world->getGameObjects().at(i)->isColiding()->getType() == "Floor") {
+				world->getGameObjects().at(i)->GetPhysicsObject()->AplyFriction();							//FRICTION WITH FLOOR
+			}
+			else if (world->getGameObjects().at(i)->isColiding()->getType() == "Player" && world->getGameObjects().at(i)->getType() == "Bonus") {
 				Bonuses++;
 				world->getGameObjects().at(i)->setType("Collected");
 				world->getGameObjects().at(i)->removeObject();
-				std::cout << "COLIDING" << '\n';
 			}
+			else if (world->getGameObjects().at(i)->isColiding()->getType() == "Enemy" && world->getGameObjects().at(i)->getType() == "Bonus") {
+				world->getGameObjects().at(i)->setType("Collected");
+				world->getGameObjects().at(i)->removeObject();
+				Bonuses--;
+			}
+
+
+
 			else if (world->getGameObjects().at(i)->isColiding()->getType() == "Player" && world->getGameObjects().at(i)->getType() == "End") {
-				win = true;
+				win = 1;
 			}
-		}
+			else if (world->getGameObjects().at(i)->isColiding()->getType() == "Enemy" && world->getGameObjects().at(i)->getType() == "End") {
+				win = -1;
+			}
+
+			}
+
+		
 	}
 
-	if (testStateObject) { 
+
+
+	//if (testStateObject) { 
 		testStateObject->Update(dt); 
-	}
+	//}
 
 	if (!inSelectionMode) {
 		world->GetMainCamera()->UpdateCamera(dt);
@@ -185,6 +249,25 @@ void TutorialGame::winScreen(float dt) {
 }
 
 
+void NCL::CSC8503::TutorialGame::enemyPathfindingSetup(){
+	NavigationGrid  grid("TestGrid1.txt");
+
+	NavigationPath  outPath;
+
+	Vector3  startPos(550, 0, 550);
+
+	Vector3  endPos(30, 0, 30);
+
+	bool  found = grid.FindPath(startPos, endPos, outPath);
+
+	Vector3  pos;
+	while (outPath.PopWaypoint(pos)) {
+		testNodes.push_back(pos);
+	}
+	testNodes.pop_back(); //gets rid of teh last one since it causes glitches
+}
+
+
 
 void TutorialGame::UpdateGame(float dt) {
 
@@ -207,6 +290,8 @@ void TutorialGame::UpdateGame(float dt) {
 
 
 }
+
+
 
 void TutorialGame::UpdateKeys() {
 
@@ -234,7 +319,7 @@ void TutorialGame::LockedObjectMovement() {
 	Vector3 charForward  = lockedObject->GetTransform().GetOrientation() * Vector3(0, 0, 1);
 	Vector3 charForward2 = lockedObject->GetTransform().GetOrientation() * Vector3(0, 0, 1);
 
-	float force = 100.0f;
+	float force = 20.0f;
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT)) {
 		lockedObject->GetPhysicsObject()->AddForce(-rightAxis * force);
@@ -300,11 +385,13 @@ void TutorialGame::InitCamera() {
 void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
-	AddBonusToWorld(Vector3(7, 7, 7));
-	addEndToWorld(Vector3(10, 3,1));
-	InitSphereGridWorld(5, 5, 50, 50, 2);
-
-	AddPlayerToWorld(Vector3(0, 0, 0));
+	AddBonusToWorld(Vector3(520, 0, 520));
+	addEndToWorld(Vector3(30, 10, 30));
+	InitSphereGridWorld(10, 9, 70, 70, 5);
+	InitCubeGridWorld(5, 5, 100, 100, Vector3(10,10,10));
+	AddPlayerToWorld(Vector3(550, 10, 550));
+	AddEnemyToWorld(Vector3(560, 10, 560));
+	InitMoveGridWorld(2, 2, 250, 250);
 
 	InitDefaultFloor();
 
@@ -416,12 +503,12 @@ GameObject* TutorialGame::addEndToWorld(const Vector3& position) {
 	GameObject* sphere = new GameObject();
 
 
-	SphereVolume* volume = new SphereVolume(1.5f);
+	SphereVolume* volume = new SphereVolume(5.0f);
 	sphere->SetBoundingVolume((CollisionVolume*)volume);
 	sphere->setType("End");
 
 	sphere->GetTransform()
-		.SetScale(Vector3(3,3,3))
+		.SetScale(Vector3(10,10,10))
 		.SetPosition(position);
 
 	sphere->SetRenderObject(new RenderObject(&sphere->GetTransform(), appleMesh, redTex, basicShader));
@@ -473,7 +560,7 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
 	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
 
-	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
+	cube->GetPhysicsObject()->SetInverseMass(0.0f);
 	cube->GetPhysicsObject()->InitCubeInertia();
 
 	world->AddGameObject(cube);
@@ -488,7 +575,16 @@ void TutorialGame::InitSphereGridWorld(int numRows, int numCols, float rowSpacin
 			AddSphereToWorld(position, radius, 1.0f);
 		}
 	}
-	AddFloorToWorld(Vector3(0, -2, 0));
+
+}
+void TutorialGame::InitMoveGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing) {
+	for (int x = 0; x < numCols; ++x) {
+		for (int z = 0; z < numRows; ++z) {
+			Vector3 position = Vector3(x * colSpacing, 10.0f, z * rowSpacing);
+			AddStateObjectToWorld(position);
+		}
+	}
+
 }
 
 void TutorialGame::InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing) {
@@ -512,14 +608,14 @@ void TutorialGame::InitMixedGridWorld(int numRows, int numCols, float rowSpacing
 void TutorialGame::InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims) {
 	for (int x = 1; x < numCols+1; ++x) {
 		for (int z = 1; z < numRows+1; ++z) {
-			Vector3 position = Vector3(x * colSpacing, 10.0f, z * rowSpacing);
+			Vector3 position = Vector3(x * colSpacing, 5.0f, z * rowSpacing);
 			AddCubeToWorld(position, cubeDims, 1.0f);
 		}
 	}
 }
 
 void TutorialGame::InitDefaultFloor() {
-	AddFloorToWorld(Vector3(0, -2, 0));
+	AddFloorToWorld(Vector3(300, -2, 300));
 }
 
 void TutorialGame::InitGameExamples() {
@@ -530,7 +626,7 @@ void TutorialGame::InitGameExamples() {
 
 GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 	float meshSize = 3.0f;
-	float inverseMass = 0.5f;
+	float inverseMass = 0.9f;
 
 	GameObject* character = new GameObject();
 
@@ -560,7 +656,7 @@ GameObject* TutorialGame::AddPlayerToWorld(const Vector3& position) {
 
 GameObject* TutorialGame::AddEnemyToWorld(const Vector3& position) {
 	float meshSize		= 3.0f;
-	float inverseMass	= 0.5f;
+	float inverseMass	= 0.1f;
 
 	GameObject* character = new GameObject();
 
@@ -626,7 +722,7 @@ bool TutorialGame::SelectObject() {
 			if (selectionObject) {	//set colour to deselected;
 				selectionObject->GetRenderObject()->SetColour(Vector4(1, 1, 1, 1));
 				selectionObject = nullptr;
-				lockedObject	= nullptr;
+
 			}
 
 			Ray ray = CollisionDetection::BuildRayFromMouse(*world->GetMainCamera());

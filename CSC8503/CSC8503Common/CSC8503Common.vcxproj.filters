@@ -176,9 +176,6 @@
     <ClCompile Include="NavigationMesh.cpp">
       <Filter>Pathfinding</Filter>
     </ClCompile>
-    <ClCompile Include="QuadTree.cpp">
-      <Filter>CollisionDetection</Filter>
-    </ClCompile>
     <ClCompile Include="PositionConstraint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

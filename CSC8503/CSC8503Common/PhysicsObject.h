@@ -12,8 +12,13 @@ namespace NCL {
 
 		class PhysicsObject	{
 		public:
+			PhysicsObject();
 			PhysicsObject(Transform* parentTransform, const CollisionVolume* parentVolume);
 			~PhysicsObject();
+
+			int getFriction() const {
+				return  friction;
+			}
 
 			Vector3 GetLinearVelocity() const {
 				return linearVelocity;
@@ -29,6 +34,9 @@ namespace NCL {
 
 			Vector3 GetForce() const {
 				return force;
+			}
+			void AplyFriction()  {
+				force = force*friction;
 			}
 
 			void SetInverseMass(float invMass) {

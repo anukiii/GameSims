@@ -17,6 +17,14 @@ PhysicsObject::~PhysicsObject()	{
 
 }
 
+NCL::CSC8503::PhysicsObject::PhysicsObject()
+{
+	inverseMass = 1.0f;
+	elasticity = 0.8f;
+	friction = 0.8f;
+
+}
+
 void PhysicsObject::ApplyAngularImpulse(const Vector3& force) {
 	if (force.Length() > 0) {
 		bool a = true;
