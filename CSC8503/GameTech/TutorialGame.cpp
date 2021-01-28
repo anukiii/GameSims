@@ -113,7 +113,7 @@ void TutorialGame::mainGame(float dt) {
 	if (!inSelectionMode) {
 		world->GetMainCamera()->UpdateCamera(dt);
 	}
-	score = 100 + Bonuses * 100 - difftime(time(0), start) * 10;
+	score = 1000 + Bonuses * 100 - difftime(time(0), start) * 10;
 
 	Debug::Print(std::to_string(score), Vector2(80, 10));
 	UpdateKeys();
@@ -623,15 +623,8 @@ bool TutorialGame::SelectObject() {
 		renderer->DrawString("Press Q to change to select mode!", Vector2(5, 85));
 	}
 
-	if (lockedObject) {
-		renderer->DrawString("Press L to unlock object!", Vector2(5, 80));
-	}
 
-	else if(selectionObject){
-		renderer->DrawString("Press L to lock selected object object!", Vector2(5, 80));
-	}
-
-	if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::L)) {
+	/*if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::L)) {
 		if (selectionObject) {
 			if (lockedObject == selectionObject) {
 				lockedObject = nullptr;
@@ -641,33 +634,29 @@ bool TutorialGame::SelectObject() {
 			}
 		}
 
-	}
+	}*/
 
 	return false;
 }
 
-/*
-If an object has been clicked, it can be pushed with the right mouse button, by an amount
-determined by the scroll wheel. In the first tutorial this won't do anything, as we haven't
-added linear motion into our physics system. After the second tutorial, objects will move in a straight
-line - after the third, they'll be able to twist under torque aswell.
-*/
+
+
 void TutorialGame::MoveSelectedObject() {
-	renderer->DrawString("Click  Force:" + std::to_string(forceMagnitude),Vector2(10, 20)); //Draw  debug  text at 10,20
-	forceMagnitude  +=  Window :: GetMouse()-> GetWheelMovement () * 100.0f;
+	//forceMagnitude  +=  Window :: GetMouse()-> GetWheelMovement () * 100.0f;
 
 		if (! selectionObject) {
-	return;//we  haven’t selected  anything!
-}
+			renderer->DrawString("Press an object to get info", Vector2(10, 20)); //Draw  debug  text at 10,20
 
-		if (Window::GetMouse()->ButtonPressed(NCL::MouseButtons::RIGHT)) {
+			return;//we  haven’t selected  anything!
+		}
 			Ray  ray = CollisionDetection::BuildRayFromMouse(* world->GetMainCamera());  
 				RayCollision  closestCollision; 
 				if (world->Raycast(ray, closestCollision, true)) {
-				           
-					if (closestCollision.node == selectionObject) {
-						selectionObject->GetPhysicsObject()->AddForceAtPosition(ray.GetDirection() * forceMagnitude,closestCollision.collidedAt);
-				}
+
+				//if (closestCollision.node == selectionObject) {											//If enabled, will only show if hovering over selected object
+						renderer->DrawString("Object is " + selectionObject->getType(), Vector2(10, 20)); //Draw  debug  text at 10,20
+
+				//}
 			}
-		}
+		
 }
