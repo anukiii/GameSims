@@ -16,6 +16,7 @@ namespace NCL {
 		public:
 			GameTechRenderer(GameWorld& world);
 			~GameTechRenderer();
+			void ClearFrame() { gameWorld.Clear(); }
 
 		protected:
 			void RenderFrame()	override;

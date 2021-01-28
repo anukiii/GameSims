@@ -12,9 +12,14 @@ namespace NCL {
 			~TutorialGame();
 
 			virtual void UpdateGame(float dt);
+			void mainMenu(float dt);
+			void mainGame(float dt);
+			void setScene(int newScene);
+			int getScore() { return score; }
+			void InitialiseAssets();
+
 
 		protected:
-			void InitialiseAssets();
 			StateGameObject* AddStateObjectToWorld(const  Vector3& position);
 
 			void InitCamera();
@@ -45,8 +50,6 @@ namespace NCL {
 			GameObject* AddEnemyToWorld(const Vector3& position);
 			GameObject* AddBonusToWorld(const Vector3& position);
 			
-			void mainMenu(float dt);
-			void mainGame(float dt);
 			void endScreen(float dt);
 
 

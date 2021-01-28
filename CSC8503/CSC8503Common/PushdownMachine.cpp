@@ -1,10 +1,14 @@
 #include "PushdownMachine.h"
 #include "PushdownState.h"
+#include "../GameTech/TutorialGame.h"
+
 using namespace NCL::CSC8503;
 
 PushdownMachine::PushdownMachine()
 {
 	activeState = nullptr;
+	initialState = nullptr;
+	g = nullptr;
 }
 
 PushdownMachine::~PushdownMachine()
@@ -14,31 +18,31 @@ PushdownMachine::~PushdownMachine()
 bool  PushdownMachine::Update(float dt) {
 	if (activeState) {
 		PushdownState* newState = nullptr;
-		PushdownState::PushdownResult result = activeState->OnUpdate(dt , &newState );
+		PushdownState::PushdownResult result = activeState->OnUpdate(dt , &newState,g );
 		switch (result) {
 			case PushdownState::Pop: {
-				activeState->OnSleep();
+				activeState->OnSleep(g,dt);
 				stateStack.pop();
 				if (stateStack.empty()) {
 					return false;
 				}
 				else {
 					activeState = stateStack.top();
-					activeState->OnAwake();
+					activeState->OnAwake(g,dt);
 				}
 			}break;
 			case PushdownState::Push: {
-				activeState->OnSleep();
+				activeState->OnSleep(g,dt);
 				stateStack.push(newState);
 				activeState = newState;
-				newState->OnAwake();
+				newState->OnAwake(g,dt);
 			}break;
 		}
 	}
 	else {
 		stateStack.push(initialState);
 		activeState = initialState;
-		activeState->OnAwake();
+		activeState->OnAwake(g,dt);
 	}
 	return  true;
 }

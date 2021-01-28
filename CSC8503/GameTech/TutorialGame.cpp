@@ -17,7 +17,7 @@ TutorialGame::TutorialGame()	{
 	physics		= new PhysicsSystem(*world);
 
 	forceMagnitude	= 10.0f;
-	useGravity		= false;
+	useGravity		= true;
 	inSelectionMode = false;
 	Bonuses = 0;
 	Debug::SetRenderer(renderer);
@@ -72,7 +72,13 @@ TutorialGame::~TutorialGame()	{
 	delete world;
 }
 
+void TutorialGame::setScene(int newScene) {
+	scene = newScene;
+}
+
+
 void TutorialGame::mainMenu(float dt) {
+	renderer->ClearFrame();
 	Debug::Print("TRIP GIRLS", Vector2(40, 30));
 	Debug::Print("Press 1 to start", Vector2(35, 40));
 	Debug::Print("Press esc to exit", Vector2(35, 50));
@@ -80,10 +86,7 @@ void TutorialGame::mainMenu(float dt) {
 
 	Debug::FlushRenderables(dt);
 	renderer->Render();
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM1)) {
-		scene = 1;
-		InitialiseAssets();
-	}
+
 }
 
 
@@ -110,17 +113,11 @@ void TutorialGame::mainGame(float dt) {
 	if (!inSelectionMode) {
 		world->GetMainCamera()->UpdateCamera(dt);
 	}
-	score = 1000 + Bonuses * 100 - difftime(time(0), start) * 10;
+	score = 100 + Bonuses * 100 - difftime(time(0), start) * 10;
 
 	Debug::Print(std::to_string(score), Vector2(80, 10));
 	UpdateKeys();
 
-	if (useGravity) {
-		Debug::Print("(G)ravity on", Vector2(5, 95));
-	}
-	else {
-		Debug::Print("(G)ravity off", Vector2(5, 95));
-	}
 
 	SelectObject();
 	MoveSelectedObject();
@@ -150,7 +147,7 @@ void TutorialGame::mainGame(float dt) {
 	Debug::FlushRenderables(dt);
 	renderer->Render();
 
-	scene = (score == 0 ? 2 : scene);
+	//scene = (score == 0 ? 2 : scene);
 }
 
 void TutorialGame::endScreen(float dt) {
@@ -161,10 +158,7 @@ void TutorialGame::endScreen(float dt) {
 
 	Debug::FlushRenderables(dt);
 	renderer->Render();
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM1)) {
-		scene = 1;
-		InitialiseAssets();
-	}
+
 }
 
 
@@ -188,22 +182,8 @@ void TutorialGame::UpdateGame(float dt) {
 }
 
 void TutorialGame::UpdateKeys() {
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F1)) {
-		InitWorld(); //We can reset the simulation at any time with F1
-		selectionObject = nullptr;
-		lockedObject	= nullptr;
-	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F2)) {
-		InitCamera(); //F2 will reset the camera to a specific default place
-	}
 
 
-
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::G)) {
-		useGravity = !useGravity; //Toggle gravity!
-		physics->UseGravity(useGravity);
-	}
 	//Running certain physics updates in a consistent order might cause some
 	//bias in the calculations - the same objects might keep 'winning' the constraint
 	//allowing the other one to stretch too much etc. Shuffling the order so that it
@@ -225,9 +205,7 @@ void TutorialGame::UpdateKeys() {
 	if (lockedObject) {
 		LockedObjectMovement();
 	}
-	else {
-		//DebugObjectMovement();
-	}
+
 }
 
 void TutorialGame::LockedObjectMovement() {
