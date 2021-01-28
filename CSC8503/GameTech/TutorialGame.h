@@ -12,11 +12,10 @@ namespace NCL {
 			~TutorialGame();
 
 			virtual void UpdateGame(float dt);
-			void mainMenu(float dt);
-			void mainGame(float dt);
 			void setScene(int newScene);
 			int getScore() { return score; }
 			void InitialiseAssets();
+			bool isWin() { return win; }
 
 
 		protected:
@@ -39,7 +38,10 @@ namespace NCL {
 			void MoveSelectedObject();
 			void DebugObjectMovement();
 			void LockedObjectMovement();
-
+			
+			
+			
+			GameObject* addEndToWorld(const Vector3& position);
 			GameObject* AddFloorToWorld(const Vector3& position);
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
@@ -51,6 +53,9 @@ namespace NCL {
 			GameObject* AddBonusToWorld(const Vector3& position);
 			
 			void endScreen(float dt);
+			void winScreen(float dt);
+			void mainGame(float dt);
+			void mainMenu(float dt);
 
 
 
@@ -61,6 +66,7 @@ namespace NCL {
 
 			bool useGravity;
 			bool inSelectionMode;
+			bool win;
 
 			float		forceMagnitude;
 
@@ -70,7 +76,10 @@ namespace NCL {
 			OGLMesh*	cubeMesh	= nullptr;
 			OGLMesh*	sphereMesh	= nullptr;
 			OGLTexture* basicTex	= nullptr;
+			OGLTexture* redTex	= nullptr;
 			OGLShader*	basicShader = nullptr;
+			OGLMesh*	gooseMesh = nullptr;
+			OGLMesh*	appleMesh = nullptr;
 
 			//Coursework Meshes
 			OGLMesh*	charMeshA	= nullptr;
@@ -90,7 +99,7 @@ namespace NCL {
 			time_t  start;
 			int Bonuses;
 			int score;
-			int scene; // 0 is main menu, 1, is level, 2 is end screen
+			int scene; // 0 is main menu, 1, is level, 2 is end screen, 3 is win
 
 		};
 	}

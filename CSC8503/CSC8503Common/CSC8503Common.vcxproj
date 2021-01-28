@@ -167,6 +167,7 @@
     <ClInclude Include="StateMachine.h" />
     <ClInclude Include="StateTransition.h" />
     <ClInclude Include="Transform.h" />
+    <ClInclude Include="Win.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="CollisionDetection.cpp" />

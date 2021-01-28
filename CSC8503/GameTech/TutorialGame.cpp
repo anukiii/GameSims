@@ -17,7 +17,7 @@ TutorialGame::TutorialGame()	{
 	physics		= new PhysicsSystem(*world);
 
 	forceMagnitude	= 10.0f;
-	useGravity		= true;
+	physics->UseGravity(true);
 	inSelectionMode = false;
 	Bonuses = 0;
 	Debug::SetRenderer(renderer);
@@ -46,13 +46,18 @@ void TutorialGame::InitialiseAssets() {
 	loadFunc("security.msh"	 , &enemyMesh);
 	loadFunc("coin.msh"		 , &bonusMesh);
 	loadFunc("capsule.msh"	 , &capsuleMesh);
+	loadFunc("Cylinder.msh"	, &gooseMesh);
+	loadFunc("Male1.msh"	, &appleMesh);
 
 	basicTex	= (OGLTexture*)TextureLoader::LoadAPITexture("checkerboard.png");
+	redTex = (OGLTexture*)TextureLoader::LoadAPITexture("redTex.png");
 	basicShader = new OGLShader("GameTechVert.glsl", "GameTechFrag.glsl");
 
 	InitCamera();
 	InitWorld();
 	start = time(0);
+	win = false;
+
 }
 
 
@@ -63,7 +68,10 @@ TutorialGame::~TutorialGame()	{
 	delete charMeshB;
 	delete enemyMesh;
 	delete bonusMesh;
+	delete gooseMesh;
+	delete appleMesh;
 
+	delete redTex;
 	delete basicTex;
 	delete basicShader;
 
@@ -102,6 +110,9 @@ void TutorialGame::mainGame(float dt) {
 				world->getGameObjects().at(i)->setType("Collected");
 				world->getGameObjects().at(i)->removeObject();
 				std::cout << "COLIDING" << '\n';
+			}
+			else if (world->getGameObjects().at(i)->isColiding()->getType() == "Player" && world->getGameObjects().at(i)->getType() == "End") {
+				win = true;
 			}
 		}
 	}
@@ -147,7 +158,6 @@ void TutorialGame::mainGame(float dt) {
 	Debug::FlushRenderables(dt);
 	renderer->Render();
 
-	//scene = (score == 0 ? 2 : scene);
 }
 
 void TutorialGame::endScreen(float dt) {
@@ -160,6 +170,20 @@ void TutorialGame::endScreen(float dt) {
 	renderer->Render();
 
 }
+
+void TutorialGame::winScreen(float dt) {
+	Debug::Print("WINNER WINNER", Vector2(40, 30));
+	Debug::Print("Your final score was " + score, Vector2(40, 30));
+
+	Debug::Print("Press 1 to try again", Vector2(35, 50));
+	Debug::Print("Press esc to exit", Vector2(35, 60));
+	renderer->Update(dt);
+
+	Debug::FlushRenderables(dt);
+	renderer->Render();
+
+}
+
 
 
 void TutorialGame::UpdateGame(float dt) {
@@ -175,6 +199,9 @@ void TutorialGame::UpdateGame(float dt) {
 	case 2:
 		endScreen(dt);
 		break;
+	case 3:
+		winScreen(dt);
+		break;
 	}
 
 
@@ -183,24 +210,6 @@ void TutorialGame::UpdateGame(float dt) {
 
 void TutorialGame::UpdateKeys() {
 
-
-	//Running certain physics updates in a consistent order might cause some
-	//bias in the calculations - the same objects might keep 'winning' the constraint
-	//allowing the other one to stretch too much etc. Shuffling the order so that it
-	//is random every frame can help reduce such bias.
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F9)) {
-		world->ShuffleConstraints(true);
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F10)) {
-		world->ShuffleConstraints(false);
-	}
-
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F7)) {
-		world->ShuffleObjects(true);
-	}
-	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::F8)) {
-		world->ShuffleObjects(false);
-	}
 
 	if (lockedObject) {
 		LockedObjectMovement();
@@ -292,7 +301,7 @@ void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
 	AddBonusToWorld(Vector3(7, 7, 7));
-;
+	addEndToWorld(Vector3(10, 3,1));
 	InitSphereGridWorld(5, 5, 50, 50, 2);
 
 	AddPlayerToWorld(Vector3(0, 0, 0));
@@ -360,18 +369,18 @@ StateGameObject* NCL::CSC8503::TutorialGame::AddStateObjectToWorld(const Vector3
 {
 	StateGameObject* apple = new StateGameObject();
 
-	SphereVolume* volume = new SphereVolume(1.0f);
+	SphereVolume* volume = new SphereVolume(1.5f);
 	apple->SetBoundingVolume((CollisionVolume*)volume);
-	apple->setType("Sphere");
+	apple->setType("Moving");
 
 	apple->GetTransform()
-		.SetScale(Vector3(1, 1, 1))
+		.SetScale(Vector3(3, 3, 3))
 		.SetPosition(position);
 
-	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), sphereMesh, nullptr, basicShader));
+	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), gooseMesh, nullptr, basicShader));
 	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
 
-	apple->GetPhysicsObject()->SetInverseMass(0.1f);
+	apple->GetPhysicsObject()->SetInverseMass(0.3f);
 	apple->GetPhysicsObject()->InitSphereInertia();
 
 	world->AddGameObject(apple);
@@ -380,13 +389,7 @@ StateGameObject* NCL::CSC8503::TutorialGame::AddStateObjectToWorld(const Vector3
 }
 
 
-/*
 
-Builds a game object that uses a sphere mesh for its graphics, and a bounding sphere for its
-rigid body representation. This and the cube function will let you build a lot of 'simple' 
-physics worlds. You'll probably need another function for the creation of OBB cubes too.
-
-*/
 GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius, float inverseMass) {
 	GameObject* sphere = new GameObject();
 
@@ -398,7 +401,7 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 		.SetScale(sphereSize)
 		.SetPosition(position);
 
-	sphere->SetRenderObject(new RenderObject(&sphere->GetTransform(), sphereMesh, basicTex, basicShader));
+	sphere->SetRenderObject(new RenderObject(&sphere->GetTransform(), sphereMesh, redTex, basicShader));
 	sphere->SetPhysicsObject(new PhysicsObject(&sphere->GetTransform(), sphere->GetBoundingVolume()));
 
 	sphere->GetPhysicsObject()->SetInverseMass(inverseMass);
@@ -408,6 +411,31 @@ GameObject* TutorialGame::AddSphereToWorld(const Vector3& position, float radius
 
 	return sphere;
 }
+
+GameObject* TutorialGame::addEndToWorld(const Vector3& position) {
+	GameObject* sphere = new GameObject();
+
+
+	SphereVolume* volume = new SphereVolume(1.5f);
+	sphere->SetBoundingVolume((CollisionVolume*)volume);
+	sphere->setType("End");
+
+	sphere->GetTransform()
+		.SetScale(Vector3(3,3,3))
+		.SetPosition(position);
+
+	sphere->SetRenderObject(new RenderObject(&sphere->GetTransform(), appleMesh, redTex, basicShader));
+	sphere->SetPhysicsObject(new PhysicsObject(&sphere->GetTransform(), sphere->GetBoundingVolume()));
+
+	sphere->GetPhysicsObject()->SetInverseMass(0);
+	sphere->GetPhysicsObject()->InitSphereInertia();
+
+	world->AddGameObject(sphere);
+
+	return sphere;
+}
+
+
 
 GameObject* TutorialGame::AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass) {
 	GameObject* capsule = new GameObject();
@@ -554,6 +582,7 @@ GameObject* TutorialGame::AddEnemyToWorld(const Vector3& position) {
 	return character;
 }
 
+
 GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 	GameObject* apple = new GameObject();
 
@@ -576,14 +605,8 @@ GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 	return apple;
 }
 
-/*
 
-Every frame, this code will let you perform a raycast, to see if there's an object
-underneath the cursor, and if so 'select it' into a pointer, so that it can be 
-manipulated later. Pressing Q will let you toggle between this behaviour and instead
-letting you move the camera around. 
 
-*/
 bool TutorialGame::SelectObject() {
 	if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::Q)) {
 		inSelectionMode = !inSelectionMode;
@@ -624,18 +647,6 @@ bool TutorialGame::SelectObject() {
 	}
 
 
-	/*if (Window::GetKeyboard()->KeyPressed(NCL::KeyboardKeys::L)) {
-		if (selectionObject) {
-			if (lockedObject == selectionObject) {
-				lockedObject = nullptr;
-			}
-			else {
-				lockedObject = selectionObject;
-			}
-		}
-
-	}*/
-
 	return false;
 }
 
@@ -645,16 +656,16 @@ void TutorialGame::MoveSelectedObject() {
 	//forceMagnitude  +=  Window :: GetMouse()-> GetWheelMovement () * 100.0f;
 
 		if (! selectionObject) {
-			renderer->DrawString("Press an object to get info", Vector2(10, 20)); //Draw  debug  text at 10,20
+			renderer->DrawString("Press an object to get info", Vector2(10, 20));
 
-			return;//we  haven’t selected  anything!
+			return;
 		}
 			Ray  ray = CollisionDetection::BuildRayFromMouse(* world->GetMainCamera());  
 				RayCollision  closestCollision; 
 				if (world->Raycast(ray, closestCollision, true)) {
 
-				//if (closestCollision.node == selectionObject) {											//If enabled, will only show if hovering over selected object
-						renderer->DrawString("Object is " + selectionObject->getType(), Vector2(10, 20)); //Draw  debug  text at 10,20
+				//if (closestCollision.node == selectionObject) {										  //If enabled, will only show if hovering over selected object
+						renderer->DrawString("Object is " + selectionObject->getType(), Vector2(10, 20));
 
 				//}
 			}

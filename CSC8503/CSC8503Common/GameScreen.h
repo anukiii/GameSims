@@ -4,6 +4,7 @@
 #include "../../Common/Window.h"
 #include "PauseScreen.h"
 #include "GameOverScreen.h"
+#include "Win.h"
 
 using namespace NCL;
 using namespace CSC8503;
@@ -11,7 +12,7 @@ using namespace CSC8503;
 	class  GameScreen : public  PushdownState { 
 	PushdownResult  OnUpdate(float dt, 
 	PushdownState * *newState, TutorialGame* g) override {
-	pauseReminder -= dt;
+
 	
 
 		g->UpdateGame(dt);
@@ -25,7 +26,11 @@ using namespace CSC8503;
 		*newState = new  GameOverScreen();
 		return   PushdownResult::Push;
 	}
+	if (g->isWin()) {
+		*newState = new  Win();
+		return   PushdownResult::Push;
 
+	}
 
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::F1)) { 
 		std::cout << "Returning  to main  menu!\n"; 
@@ -41,9 +46,4 @@ void  OnAwake(TutorialGame* g, float dt)  override {
 
 }
 
-	
-	protected:
-
-
-	float  pauseReminder = 1; 
 };
