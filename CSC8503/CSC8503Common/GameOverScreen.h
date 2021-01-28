@@ -13,7 +13,11 @@ class  GameOverScreen : public  PushdownState {
         g->UpdateGame(dt);
 
         if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM1)) {
-            //*newState = new  GameScreen();
+            g->setGameType(1);
+            return  PushdownResult::Pop;
+        }       
+        if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM2)) {
+            g->setGameType(2);
             return  PushdownResult::Pop;
         }
         if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::ESCAPE)) {

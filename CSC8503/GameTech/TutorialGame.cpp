@@ -54,7 +54,7 @@ void TutorialGame::InitialiseAssets() {
 	basicTex	= (OGLTexture*)TextureLoader::LoadAPITexture("checkerboard.png");
 	redTex = (OGLTexture*)TextureLoader::LoadAPITexture("redTex.png");
 	basicShader = new OGLShader("GameTechVert.glsl", "GameTechFrag.glsl");
-
+	StateObjects.clear();
 	enemyPathfindingSetup();
 	currentNode = 0;
 	InitCamera();
@@ -62,6 +62,7 @@ void TutorialGame::InitialiseAssets() {
 	start = time(0);
 	win = 0;
 	enemyStuckCounter = 0;
+	gameType = 1;
 
 }
 
@@ -93,8 +94,9 @@ void TutorialGame::setScene(int newScene) {
 void TutorialGame::mainMenu(float dt) {
 	renderer->ClearFrame();
 	Debug::Print("TRIP GIRLS", Vector2(40, 30));
-	Debug::Print("Press 1 to start", Vector2(35, 40));
-	Debug::Print("Press esc to exit", Vector2(35, 50));
+	Debug::Print("Press 1 to start Practise round", Vector2(20, 40));
+	Debug::Print("Press 2 to start Vs AI round", Vector2(20, 50));
+	Debug::Print("Press esc to exit", Vector2(35, 60));
 	renderer->Update(dt);
 
 	Debug::FlushRenderables(dt);
@@ -128,10 +130,10 @@ void TutorialGame::mainGame(float dt) {
 
 
 	for (int i = 0; i < world->getGameObjects().size(); i++) {
+		if (world->getGameObjects().at(i)->getType() == "Moving") {
+			
+		}
 		if (world->getGameObjects().at(i)->getType() == "Enemy") {
-
-
-
 			enemyPathfinding(world->getGameObjects().at(i));
 			if (world->getGameObjects().at(i)->isColiding() != nullptr) {
 
@@ -178,12 +180,12 @@ void TutorialGame::mainGame(float dt) {
 
 		
 	}
+	for (int i = 0; i < StateObjects.size(); i++) {
+		StateObjects.at(i)->Update(dt);
+	}
 
 
 
-	//if (testStateObject) { 
-		testStateObject->Update(dt); 
-	//}
 
 	if (!inSelectionMode) {
 		world->GetMainCamera()->UpdateCamera(dt);
@@ -226,8 +228,9 @@ void TutorialGame::mainGame(float dt) {
 
 void TutorialGame::endScreen(float dt) {
 	Debug::Print("GAME OVER", Vector2(40, 30));
-	Debug::Print("Press 1 to start", Vector2(35, 40));
-	Debug::Print("Press esc to exit", Vector2(35, 50));
+	Debug::Print("Press 1 to start practice", Vector2(30, 40));
+	Debug::Print("Press 2 to start VS AI", Vector2(30, 50));
+	Debug::Print("Press esc to exit", Vector2(35, 60));
 	renderer->Update(dt);
 
 	Debug::FlushRenderables(dt);
@@ -264,7 +267,6 @@ void NCL::CSC8503::TutorialGame::enemyPathfindingSetup(){
 	while (outPath.PopWaypoint(pos)) {
 		testNodes.push_back(pos);
 	}
-	testNodes.pop_back(); //gets rid of teh last one since it causes glitches
 }
 
 
@@ -390,18 +392,20 @@ void TutorialGame::InitWorld() {
 	InitSphereGridWorld(10, 9, 70, 70, 5);
 	InitCubeGridWorld(5, 5, 100, 100, Vector3(10,10,10));
 	AddPlayerToWorld(Vector3(550, 10, 550));
-	AddEnemyToWorld(Vector3(560, 10, 560));
-	InitMoveGridWorld(2, 2, 250, 250);
+	if (gameType == 2) {
+		AddEnemyToWorld(Vector3(560, 10, 560));
+	}
+	InitMoveGridWorld(3, 3, 250, 250);
+	BridgeConstraintTest();
 
 	InitDefaultFloor();
 
-	testStateObject = AddStateObjectToWorld(Vector3(0, 10, 0));
 
 }
 
 void TutorialGame::BridgeConstraintTest() {
 	
-		Vector3  cubeSize = Vector3(8, 8, 8);
+		Vector3  cubeSize = Vector3(3, 3, 3);
 
 		float     invCubeMass = 5; //how  heavy  the  middle  pieces  are
 		int        numLinks      = 10;   
@@ -410,12 +414,12 @@ void TutorialGame::BridgeConstraintTest() {
 		
 		Vector3  startPos = Vector3 (50, 50,  50); 
 			
-		GameObject* start = AddCubeToWorld(startPos + Vector3(0, 0, 0), cubeSize , 0);  
-		GameObject* end = AddCubeToWorld(startPos + Vector3 (( numLinks + 2) * cubeDistance , 0, 0), cubeSize , 0);
+		GameObject* start = AddMovableCubeToWorld(startPos + Vector3(0, 0, 0), cubeSize , 0);
+		GameObject* end = AddMovableCubeToWorld(startPos + Vector3 (( numLinks + 2) * cubeDistance , 0, 0), cubeSize , 0);
 		GameObject* previous = start;
 
 		for (int i = 0; i < numLinks; ++i) {   
-			GameObject* block = AddCubeToWorld(startPos + Vector3 ((i + 1) * cubeDistance , 0, 0), cubeSize , invCubeMass );       
+			GameObject* block = AddMovableCubeToWorld(startPos + Vector3 ((i + 1) * cubeDistance , 0, 0), cubeSize , invCubeMass );
 			PositionConstraint* constraint =new  PositionConstraint(previous , block , maxDistance );    
 			world ->AddConstraint(constraint );
 			previous = block;   
@@ -456,12 +460,12 @@ StateGameObject* NCL::CSC8503::TutorialGame::AddStateObjectToWorld(const Vector3
 {
 	StateGameObject* apple = new StateGameObject();
 
-	SphereVolume* volume = new SphereVolume(1.5f);
+	SphereVolume* volume = new SphereVolume(3.0f);
 	apple->SetBoundingVolume((CollisionVolume*)volume);
 	apple->setType("Moving");
 
 	apple->GetTransform()
-		.SetScale(Vector3(3, 3, 3))
+		.SetScale(Vector3(10, 10, 10))
 		.SetPosition(position);
 
 	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), gooseMesh, nullptr, basicShader));
@@ -568,6 +572,29 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	return cube;
 }
 
+GameObject* TutorialGame::AddMovableCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass) {
+	GameObject* cube = new GameObject();
+
+	AABBVolume* volume = new AABBVolume(dimensions);
+
+	cube->SetBoundingVolume((CollisionVolume*)volume);
+	cube->setType("Cube");
+	cube->GetTransform()
+		.SetPosition(position)
+		.SetScale(dimensions * 2);
+
+	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
+	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
+
+	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
+	cube->GetPhysicsObject()->InitCubeInertia();
+
+	world->AddGameObject(cube);
+
+	return cube;
+}
+
+
 void TutorialGame::InitSphereGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, float radius) {
 	for (int x = 0; x < numCols; ++x) {
 		for (int z = 0; z < numRows; ++z) {
@@ -581,7 +608,7 @@ void TutorialGame::InitMoveGridWorld(int numRows, int numCols, float rowSpacing,
 	for (int x = 0; x < numCols; ++x) {
 		for (int z = 0; z < numRows; ++z) {
 			Vector3 position = Vector3(x * colSpacing, 10.0f, z * rowSpacing);
-			AddStateObjectToWorld(position);
+			StateObjects.push_back(AddStateObjectToWorld(position));
 		}
 	}
 

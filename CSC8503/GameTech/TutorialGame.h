@@ -16,7 +16,7 @@ namespace NCL {
 			int getScore() { return score; }
 			void InitialiseAssets();
 			int isWin() { return win; }
-
+			void setGameType(int newGame) { gameType = newGame; }
 
 		protected:
 			StateGameObject* AddStateObjectToWorld(const  Vector3& position);
@@ -47,7 +47,7 @@ namespace NCL {
 			GameObject* AddFloorToWorld(const Vector3& position);
 			GameObject* AddSphereToWorld(const Vector3& position, float radius, float inverseMass = 10.0f);
 			GameObject* AddCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass = 10.0f);
-			
+			GameObject* AddMovableCubeToWorld(const Vector3& position, Vector3 dimensions, float inverseMass);
 			GameObject* AddCapsuleToWorld(const Vector3& position, float halfHeight, float radius, float inverseMass = 10.0f);
 
 			GameObject* AddPlayerToWorld(const Vector3& position);
@@ -58,7 +58,7 @@ namespace NCL {
 			void winScreen(float dt);
 			void mainGame(float dt);
 			void mainMenu(float dt);
-
+			
 
 
 
@@ -69,6 +69,7 @@ namespace NCL {
 			bool useGravity;
 			bool inSelectionMode;
 			int win;
+			int gameType;
 
 			float		forceMagnitude;
 
@@ -89,7 +90,7 @@ namespace NCL {
 			OGLMesh*	enemyMesh	= nullptr;
 			OGLMesh*	bonusMesh	= nullptr;
 
-			StateGameObject* testStateObject = nullptr;
+			vector<StateGameObject*> StateObjects;
 
 			vector <Vector3 > testNodes;
 			int currentNode;

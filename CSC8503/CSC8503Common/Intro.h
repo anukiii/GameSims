@@ -15,8 +15,15 @@ class  IntroScreen : public  PushdownState {
 
 		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM1)) { 
 			* newState = new  GameScreen(); 
+			g->setGameType(1);
 
 			return  PushdownResult::Push;  
+		}
+		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM2)) {
+			*newState = new  GameScreen();
+			g->setGameType(2);
+
+			return  PushdownResult::Push;
 		}
 			if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::ESCAPE)) {  
 				return  PushdownResult::Pop; 
