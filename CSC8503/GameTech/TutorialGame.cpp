@@ -8,6 +8,7 @@
 #include "../GameTech/StateGameObject.h"
 #include "../CSC8503Common/NavigationGrid.h"
 #include "../CSC8503Common/OrientationConstraint.h"
+#include <string>
 
 
 
@@ -228,9 +229,8 @@ void TutorialGame::mainGame(float dt) {
 
 void TutorialGame::endScreen(float dt) {
 	Debug::Print("GAME OVER", Vector2(40, 30));
-	Debug::Print("Press 1 to start practice", Vector2(30, 40));
-	Debug::Print("Press 2 to start VS AI", Vector2(30, 50));
-	Debug::Print("Press esc to exit", Vector2(35, 60));
+	Debug::Print("Press 1 to try again", Vector2(30, 40));
+	Debug::Print("Press esc to exit", Vector2(35, 50));
 	renderer->Update(dt);
 
 	Debug::FlushRenderables(dt);
@@ -240,7 +240,7 @@ void TutorialGame::endScreen(float dt) {
 
 void TutorialGame::winScreen(float dt) {
 	Debug::Print("WINNER WINNER", Vector2(40, 30));
-	Debug::Print("Your final score was " + score, Vector2(40, 30));
+	Debug::Print("Your final score was " + std::to_string(score), Vector2(30, 40));
 
 	Debug::Print("Press 1 to try again", Vector2(35, 50));
 	Debug::Print("Press esc to exit", Vector2(35, 60));
@@ -801,11 +801,12 @@ void TutorialGame::MoveSelectedObject() {
 				RayCollision  closestCollision; 
 				if (world->Raycast(ray, closestCollision, true)) {
 
-						int x = selectionObject->GetPhysicsObject()->GetInverseMass();
-						int y = selectionObject->GetTransform().GetPosition().y;
-						int  z= selectionObject->GetTransform().GetPosition().z;
+						int x = selectionObject->GetTransform().GetPosition().x;
+						int z= selectionObject->GetTransform().GetPosition().z;
 					
 						renderer->DrawString("Object is a " + selectionObject->getType(), Vector2(10, 20));
+						renderer->DrawString("X " + std::to_string(x), Vector2(10, 30));
+						renderer->DrawString("Z " + std::to_string(z), Vector2(10, 40));
 						
 
 

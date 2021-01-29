@@ -127,7 +127,6 @@ void PhysicsSystem::Update(float dt) {
 	if (updateTime > realDT) {
 		realHZ /= 2;
 		realDT *= 2;
-		std::cout << "Dropping iteration count due to long physics time...(now " << realHZ << ")\n";
 	}
 	else if(dt*2 < realDT) { //we have plenty of room to increase iteration count!
 		int temp = realHZ;
