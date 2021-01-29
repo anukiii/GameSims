@@ -2,7 +2,6 @@
 #include "PushdownState.h"
 #include "../gameTech/TutorialGame.h"
 #include "../../Common/Window.h"
-#include "PauseScreen.h"
 #include "GameOverScreen.h"
 #include "Win.h"
 
@@ -17,10 +16,7 @@ using namespace CSC8503;
 
 		g->UpdateGame(dt);
 	
-	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::P)) {
-		* newState = new  PauseScreen();
-		return   PushdownResult::Push;  
-	}
+
 	
 	if (g->getScore() <= 0 || g->isWin() ==-1) {
 		*newState = new  GameOverScreen();

@@ -22,7 +22,7 @@ namespace NCL {
 			StateGameObject* AddStateObjectToWorld(const  Vector3& position);
 
 			void InitCamera();
-			void UpdateKeys();
+
 
 			void InitWorld();
 
@@ -32,13 +32,13 @@ namespace NCL {
 			void InitMixedGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitCubeGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing, const Vector3& cubeDims);
 			void InitMoveGridWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
+			void InitBonusWorld(int numRows, int numCols, float rowSpacing, float colSpacing);
 			void InitDefaultFloor();
-			void BridgeConstraintTest();
+			void BridgeConstraintTest(Vector3 Pos);
 	
 			bool SelectObject();
 			void MoveSelectedObject();
-			void DebugObjectMovement();
-			void LockedObjectMovement();
+			void LockedObjectMovement(float dt);
 			
 			void enemyPathfindingSetup();
 			void enemyPathfinding(GameObject * enemy);
@@ -80,6 +80,8 @@ namespace NCL {
 			OGLMesh*	sphereMesh	= nullptr;
 			OGLTexture* basicTex	= nullptr;
 			OGLTexture* redTex	= nullptr;
+			OGLTexture* purpleTex	= nullptr;
+			OGLTexture* blueTex	= nullptr;
 			OGLShader*	basicShader = nullptr;
 			OGLMesh*	gooseMesh = nullptr;
 			OGLMesh*	appleMesh = nullptr;
@@ -106,7 +108,7 @@ namespace NCL {
 			int Bonuses;
 			int score;
 			int scene; // 0 is main menu, 1, is level, 2 is end screen, 3 is win
-
+			float YMax;
 		};
 	}
 }

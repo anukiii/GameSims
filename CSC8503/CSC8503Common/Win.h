@@ -2,8 +2,7 @@
 #include "PushdownState.h"
 #include "../gameTech/TutorialGame.h"
 #include "../../Common/Window.h"
-#include "PauseScreen.h"
-//#include "GameScreen.h"
+
 
 using namespace NCL;
 using namespace CSC8503;
@@ -14,8 +13,6 @@ class  Win : public  PushdownState {
 		g->UpdateGame(dt);
 
 		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::NUM1)) {
-			//*newState = new  GameScreen();
-
 			return  PushdownResult::Pop;
 		}
 		if (Window::GetKeyboard()->KeyPressed(KeyboardKeys::ESCAPE)) {

@@ -7,6 +7,7 @@
 #include "../CSC8503Common/PositionConstraint.h"
 #include "../GameTech/StateGameObject.h"
 #include "../CSC8503Common/NavigationGrid.h"
+#include "../CSC8503Common/OrientationConstraint.h"
 
 
 
@@ -53,6 +54,9 @@ void TutorialGame::InitialiseAssets() {
 
 	basicTex	= (OGLTexture*)TextureLoader::LoadAPITexture("checkerboard.png");
 	redTex = (OGLTexture*)TextureLoader::LoadAPITexture("redTex.png");
+	blueTex = (OGLTexture*)TextureLoader::LoadAPITexture("blueTex.png");
+	purpleTex = (OGLTexture*)TextureLoader::LoadAPITexture("purpleTex.png");
+
 	basicShader = new OGLShader("GameTechVert.glsl", "GameTechFrag.glsl");
 	StateObjects.clear();
 	enemyPathfindingSetup();
@@ -79,6 +83,8 @@ TutorialGame::~TutorialGame()	{
 
 	delete redTex;
 	delete basicTex;
+	delete blueTex;
+	delete purpleTex;
 	delete basicShader;
 
 	delete physics;
@@ -115,13 +121,7 @@ void NCL::CSC8503::TutorialGame::enemyPathfinding(GameObject* enemy){
 
 	enemy->GetPhysicsObject()->AddForce(( testNodes.at(currentNode)- enemy->GetTransform().GetPosition() )*3);
 
-	for (int i = 1; i < testNodes.size(); ++i) {
-			Vector3 a = testNodes[i - 1];
-			Vector3 b = testNodes[i];
 
-
-			Debug::DrawLine(a, b, Vector4(0, 1, 0, 1));
-		}
 
 }
 
@@ -193,7 +193,7 @@ void TutorialGame::mainGame(float dt) {
 	score = 1000 + Bonuses * 100 - difftime(time(0), start) * 10;
 
 	Debug::Print(std::to_string(score), Vector2(80, 10));
-	UpdateKeys();
+	LockedObjectMovement(dt);
 
 
 	SelectObject();
@@ -215,7 +215,7 @@ void TutorialGame::mainGame(float dt) {
 		world->GetMainCamera()->SetPitch(angles.x);
 		world->GetMainCamera()->SetYaw(angles.y);
 
-		Debug::DrawAxisLines(lockedObject->GetTransform().GetMatrix(), 2.0f);
+		//Debug::DrawAxisLines(lockedObject->GetTransform().GetMatrix(), 2.0f);
 	}
 
 	world->UpdateWorld(dt);
@@ -295,84 +295,84 @@ void TutorialGame::UpdateGame(float dt) {
 
 
 
-void TutorialGame::UpdateKeys() {
 
 
-	if (lockedObject) {
-		LockedObjectMovement();
-	}
-
-}
-
-void TutorialGame::LockedObjectMovement() {
-	Matrix4 view		= world->GetMainCamera()->BuildViewMatrix();
-	Matrix4 camWorld	= view.Inverse();
+void TutorialGame::LockedObjectMovement(float dt) {
+	Matrix4 view = world->GetMainCamera()->BuildViewMatrix();
+	Matrix4 camWorld = view.Inverse();
 
 	Vector3 rightAxis = Vector3(camWorld.GetColumn(0)); //view is inverse of model!
 
-	//forward is more tricky -  camera forward is 'into' the screen...
-	//so we can take a guess, and use the cross of straight up, and
-	//the right axis, to hopefully get a vector that's good enough!
+
 
 	Vector3 fwdAxis = Vector3::Cross(Vector3(0, 1, 0), rightAxis);
 	fwdAxis.y = 0.0f;
 	fwdAxis.Normalise();
 
-	Vector3 charForward  = lockedObject->GetTransform().GetOrientation() * Vector3(0, 0, 1);
+	Vector3 charForward = lockedObject->GetTransform().GetOrientation() * Vector3(0, 0, 1);
 	Vector3 charForward2 = lockedObject->GetTransform().GetOrientation() * Vector3(0, 0, 1);
 
 	float force = 20.0f;
 
+
 	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::LEFT)) {
 		lockedObject->GetPhysicsObject()->AddForce(-rightAxis * force);
-
-		
-
-		if (lockedObject->GetTransform().GetOrientation().y <= 0.65) {
-			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 6, 0));
-		}
-		else { lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -10, 0)); }
-	}
-
-	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::RIGHT)) {
-		lockedObject->GetPhysicsObject()->AddForce(rightAxis * force);
-		
-		if (lockedObject->GetTransform().GetOrientation().y>=-0.65) {
-			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -6, 0));
-		}
-		else { lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
-		 }
-	}
-
-	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::UP)) {
-		lockedObject->GetPhysicsObject()->AddForce(fwdAxis * force);
-		if (lockedObject->GetTransform().GetOrientation().y >= 0) {
-			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -6, 0));
+		if (lockedObject->GetTransform().GetOrientation().ToEuler().y >= -90) {
+			YMax = 90;
+			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 3, 0));
 		}
 		else {
-			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
+			YMax = 90;
+			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -3, 0));
 		}
 	}
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::RIGHT)) {
+			lockedObject->GetPhysicsObject()->AddForce(rightAxis * force);
+			if (lockedObject->GetTransform().GetOrientation().ToEuler().y >= 90) {
+				YMax = -90;
+				lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 3, 0));
+			}
+			else {
+				YMax = -90;
+				lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -3, 0));
+			}
+		}
 
-	if (Window::GetKeyboard()->KeyDown(KeyboardKeys::DOWN)) {
-		lockedObject->GetPhysicsObject()->AddForce(-fwdAxis * force);
-		if (lockedObject->GetTransform().GetOrientation().y <= 0 && lockedObject->GetTransform().GetOrientation().y >=-0.97) {
-			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -6, 0));
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::UP)) {
+			lockedObject->GetPhysicsObject()->AddForce(fwdAxis * force);
+			if (lockedObject->GetTransform().GetOrientation().ToEuler().y <= 0) {
+				YMax =-5;
+				lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -3, 0));
+			}
+			else {
+				YMax = 5;
+				lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 3, 0));
+			}
 		}
-		else if (lockedObject->GetTransform().GetOrientation().y <= 0 && lockedObject->GetTransform().GetOrientation().y >= -1) {
-			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 10, 0));
+
+		if (Window::GetKeyboard()->KeyDown(KeyboardKeys::DOWN)) {
+			lockedObject->GetPhysicsObject()->AddForce(-fwdAxis * force);
+			if (lockedObject->GetTransform().GetOrientation().ToEuler().y <= 0  ) {
+				YMax = -177;
+				lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -3, 0));
+			}
+			else {
+				YMax =177;
+				lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 3, 0));
+			}
+
+
 
 		}
-		else if (lockedObject->GetTransform().GetOrientation().y > 0 &&lockedObject->GetTransform().GetOrientation().y <= 0.97){
-			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, 6, 0));
-		}
-		else {
-			lockedObject->GetPhysicsObject()->AddTorque(Vector3(0, -10, 0));
-		}
+		OrientationConstraint constraint = OrientationConstraint(lockedObject, YMax);
+		constraint.UpdateConstraint(dt);
+
+
+
+
+
 	}
 
-
-}
 
 
 void TutorialGame::InitCamera() {
@@ -387,23 +387,28 @@ void TutorialGame::InitCamera() {
 void TutorialGame::InitWorld() {
 	world->ClearAndErase();
 	physics->Clear();
-	AddBonusToWorld(Vector3(520, 0, 520));
 	addEndToWorld(Vector3(30, 10, 30));
-	InitSphereGridWorld(10, 9, 70, 70, 5);
+	InitSphereGridWorld(5, 5, 140, 140, 5);
 	InitCubeGridWorld(5, 5, 100, 100, Vector3(10,10,10));
+	InitBonusWorld(5, 5, 80, 80);
+
 	AddPlayerToWorld(Vector3(550, 10, 550));
+
 	if (gameType == 2) {
 		AddEnemyToWorld(Vector3(560, 10, 560));
 	}
+
 	InitMoveGridWorld(3, 3, 250, 250);
-	BridgeConstraintTest();
+	BridgeConstraintTest(Vector3(100, 50, 100));
+	BridgeConstraintTest(Vector3(300, 50, 200));
+	BridgeConstraintTest(Vector3(300, 50, 300));
 
 	InitDefaultFloor();
 
 
 }
 
-void TutorialGame::BridgeConstraintTest() {
+void TutorialGame::BridgeConstraintTest(Vector3 Pos) {
 	
 		Vector3  cubeSize = Vector3(3, 3, 3);
 
@@ -412,7 +417,7 @@ void TutorialGame::BridgeConstraintTest() {
 		float     maxDistance   = 30; // constraint  distance    
 		float     cubeDistance = 20; // distance  between  links 
 		
-		Vector3  startPos = Vector3 (50, 50,  50); 
+		Vector3  startPos = Pos; 
 			
 		GameObject* start = AddMovableCubeToWorld(startPos + Vector3(0, 0, 0), cubeSize , 0);
 		GameObject* end = AddMovableCubeToWorld(startPos + Vector3 (( numLinks + 2) * cubeDistance , 0, 0), cubeSize , 0);
@@ -455,14 +460,25 @@ GameObject* TutorialGame::AddFloorToWorld(const Vector3& position) {
 	return floor;
 }
 
+void NCL::CSC8503::TutorialGame::InitBonusWorld(int numRows, int numCols, float rowSpacing, float colSpacing)
+{
+	for (int x = 0; x < numCols; ++x) {
+		for (int z = 0; z < numRows; ++z) {
+			Vector3 position = Vector3(x * colSpacing, 10.0f, z * rowSpacing);
+			AddBonusToWorld(position);
+		}
+	}
+
+}
+
 
 StateGameObject* NCL::CSC8503::TutorialGame::AddStateObjectToWorld(const Vector3& position)
 {
 	StateGameObject* apple = new StateGameObject();
 
-	SphereVolume* volume = new SphereVolume(3.0f);
+	SphereVolume* volume = new SphereVolume(5.0f);
 	apple->SetBoundingVolume((CollisionVolume*)volume);
-	apple->setType("Moving");
+	apple->setType("State based Movement");
 
 	apple->GetTransform()
 		.SetScale(Vector3(10, 10, 10))
@@ -556,7 +572,7 @@ GameObject* TutorialGame::AddCubeToWorld(const Vector3& position, Vector3 dimens
 	AABBVolume* volume = new AABBVolume(dimensions);
 
 	cube->SetBoundingVolume((CollisionVolume*)volume);
-	cube->setType("Cube");
+	cube->setType("Wall");
 	cube->GetTransform()
 		.SetPosition(position)
 		.SetScale(dimensions * 2);
@@ -578,12 +594,12 @@ GameObject* TutorialGame::AddMovableCubeToWorld(const Vector3& position, Vector3
 	AABBVolume* volume = new AABBVolume(dimensions);
 
 	cube->SetBoundingVolume((CollisionVolume*)volume);
-	cube->setType("Cube");
+	cube->setType("Constrained Cube");
 	cube->GetTransform()
 		.SetPosition(position)
 		.SetScale(dimensions * 2);
 
-	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, basicTex, basicShader));
+	cube->SetRenderObject(new RenderObject(&cube->GetTransform(), cubeMesh, purpleTex, basicShader));
 	cube->SetPhysicsObject(new PhysicsObject(&cube->GetTransform(), cube->GetBoundingVolume()));
 
 	cube->GetPhysicsObject()->SetInverseMass(inverseMass);
@@ -712,15 +728,14 @@ GameObject* TutorialGame::AddBonusToWorld(const Vector3& position) {
 	SphereVolume* volume = new SphereVolume(1.0f);
 	apple->SetBoundingVolume((CollisionVolume*)volume);
 	apple->setType("Bonus");
-
 	apple->GetTransform()
 		.SetScale(Vector3(0.25, 0.25, 0.25))
 		.SetPosition(position);
 
-	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), bonusMesh, nullptr, basicShader));
+	apple->SetRenderObject(new RenderObject(&apple->GetTransform(), bonusMesh, blueTex, basicShader));
 	apple->SetPhysicsObject(new PhysicsObject(&apple->GetTransform(), apple->GetBoundingVolume()));
 
-	apple->GetPhysicsObject()->SetInverseMass(1.0f);
+	apple->GetPhysicsObject()->SetInverseMass(20.0f);
 	apple->GetPhysicsObject()->InitSphereInertia();
 
 	world->AddGameObject(apple);
@@ -776,7 +791,6 @@ bool TutorialGame::SelectObject() {
 
 
 void TutorialGame::MoveSelectedObject() {
-	//forceMagnitude  +=  Window :: GetMouse()-> GetWheelMovement () * 100.0f;
 
 		if (! selectionObject) {
 			renderer->DrawString("Press an object to get info", Vector2(10, 20));
@@ -787,10 +801,16 @@ void TutorialGame::MoveSelectedObject() {
 				RayCollision  closestCollision; 
 				if (world->Raycast(ray, closestCollision, true)) {
 
-				//if (closestCollision.node == selectionObject) {										  //If enabled, will only show if hovering over selected object
-						renderer->DrawString("Object is " + selectionObject->getType(), Vector2(10, 20));
+						int x = selectionObject->GetPhysicsObject()->GetInverseMass();
+						int y = selectionObject->GetTransform().GetPosition().y;
+						int  z= selectionObject->GetTransform().GetPosition().z;
+					
+						renderer->DrawString("Object is a " + selectionObject->getType(), Vector2(10, 20));
+						
 
-				//}
+
+
+				
 			}
 		
 }

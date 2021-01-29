@@ -105,9 +105,6 @@
     <ClInclude Include="PositionConstraint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="PauseScreen.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="GameScreen.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -133,6 +130,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Win.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OrientationConstraint.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -177,6 +177,9 @@
       <Filter>Pathfinding</Filter>
     </ClCompile>
     <ClCompile Include="PositionConstraint.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OrientationConstraint.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

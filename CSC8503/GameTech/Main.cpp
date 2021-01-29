@@ -8,7 +8,6 @@
 
 #include "TutorialGame.h"
 #include "../CSC8503Common/Intro.h"
-#include "../CSC8503Common/PauseScreen.h"
 #include "../CSC8503Common/GameScreen.h"
 #include "../CSC8503Common/PushdownMachine.h"
 #include "../CSC8503Common/PushdownState.h"
@@ -23,28 +22,8 @@ using namespace CSC8503;
 
 
 
-vector <Vector3 > testNodes;
-void  TestPathfinding() { 
-	NavigationGrid  grid("TestGrid1.txt");    
 
-	NavigationPath  outPath;   
-
-	Vector3  startPos(80, 0, 10);  
-
-	Vector3  endPos(80, 0, 80);   
-
-	bool  found = grid.FindPath(startPos, endPos, outPath);    
-
-	Vector3  pos;    
-	while (outPath.PopWaypoint(pos)) { 
-		testNodes.push_back(pos);
-	} 
-}
-
-
-
-
-
+//example of behaviour tree, not implemented but functioning in console
 void  TestBehaviourTree() {
 	float  behaviourTimer; 
 	float  distanceToTarget;
@@ -174,15 +153,14 @@ void  TestBehaviourTree() {
 
 
 int main() {
-	//TestBehaviourTree();
+	TestBehaviourTree();
 	
 
 
-	Window*w = Window::CreateGameWindow("CSC8503 Game technology!", 1280, 720);
+	Window*w = Window::CreateGameWindow("CSC8503 Game technology!", 1920, 1080);
 	if (!w->HasInitialised()) {
 		return -1;
 	}
-	TestPathfinding();
 	srand(time(0));
 	w->ShowOSPointer(false);
 	w->LockMouseToWindow(true);
@@ -193,7 +171,7 @@ int main() {
 	PushdownMachine  machine(new  IntroScreen(),g);
 
 	while (w->UpdateWindow() && !Window::GetKeyboard()->KeyDown(KeyboardKeys::ESCAPE)) {
-		//DisplayPathfinding();
+		
 
 		float dt = w->GetTimer()->GetTimeDeltaSeconds();
 
